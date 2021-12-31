@@ -7,7 +7,7 @@ from datetime import datetime
 from os.path import join
 
 df = pd.DataFrame([], columns=['URL','SEO','Accessibility','Performance','Best Practices'])
-name = "RocketClicks" 
+name = "Report_reduce_version" 
 getdate = datetime.now().strftime("%m-%d-%y")
 relative_path = 'C:\\Users\\mlope\\OneDrive\\Documentos\\Lighthouse\\Lighthouse_working\\assets\\'  ### WINDOWS -> \\..\\..\\
 
@@ -24,7 +24,7 @@ def extract_info(preset):
                           preset + ' --output=json --output-path='+relative_path + name+'_'+getdate+'.report.json ' + url)
 
         time.sleep(60)
-        print("Report complete for: " + url)
+        print("INFO:Report complete for: " + url+' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 
         json_filename = join(relative_path+name+ '_' +getdate + '.report.json ')
 
@@ -36,10 +36,16 @@ def extract_info(preset):
         performance = str(round(loaded_json["categories"]["performance"]["score"] * 100))
         best_practices = str(round(loaded_json["categories"]["best-practices"]["score"] * 100))
 
-        dict = {"URL":url,"SEO":seo,"Accessibility":accessibility,"Performance":performance,"Best Practices":best_practices}
-        df = df.append(dict, ignore_index=True).sort_values(by='SEO', ascending=False)
+        print("INFO:"+ seo + '!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print("INFO:"+ accessibility + '!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print("INFO:"+ performance + '!!!!!!!!!!!!!!!!!!!!!!!!!')
+        print("INFO:"+ best_practices + '!!!!!!!!!!!!!!!!!!!!!!!!!')
 
-df.to_csv(relative_path + name + '_' + getdate + '.csv')
-print(df)
+        dict = {"URL":url,"SEO":seo,"Accessibility":accessibility,"Performance":performance,"Best Practices":best_practices}
+        
+        df = df.append(dict, ignore_index=True).sort_values(by='SEO', ascending=False)
+        print('INFO: df' +df+ ' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    df.to_csv(relative_path + name + '_' + getdate + '.csv')
+    print(df)
 
 extract_info(preset='desktop')
