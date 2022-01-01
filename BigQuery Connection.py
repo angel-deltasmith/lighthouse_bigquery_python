@@ -30,10 +30,9 @@ job_config = bigquery.QueryJobConfig(destination=output_table)#parameters = dest
 job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND #If the table already exists, then append the rows
 
 #Variables
-df = pd.DataFrame([], columns=['fetch_time','site_url','site_id','user_agent','emulated_as'])
-#df = pd.DataFrame([], columns=['fetch_time','site_url','site_id','user_agent','emulated_as','accessibility'{'total_score','bypass_repetitive_content'},])
+#df = pd.DataFrame([], columns=['fetch_time','site_url','site_id','user_agent','emulated_as'])
+#df = pd.DataFrame([], columns=["fetch_time","site_url","site_id","user_agent","emulated_as","accessibility":["total_score","bypass_repetitive_content"]
 
-#df = pd.DataFrame([], columns=['URL','SEO','Accessibility','Performance','Best Practices'])
 name = "Report_reduce_version" 
 getdate = datetime.now().strftime("%m-%d-%y")
 relative_path = 'C:\\Users\\mlope\\OneDrive\\Documentos\\Lighthouse\\Lighthouse_working\\assets\\'  ### WINDOWS -> \\..\\..\\
@@ -60,24 +59,49 @@ def extract_info(preset):
         with open(json_filename, encoding="utf8") as json_data:
             loaded_json = json.load(json_data)
 
-        fetch_time = loaded_json['fetchTime']
-        site_url = loaded_json['finalUrl']
-        site_id = id
-        user_agent = loaded_json['userAgent']
-        emulated_as = loaded_json['configSettings']['formFactor']
+        data_feed_json = [{
+          'fetch_time' : loaded_json['fetchTime'],
+          'site_url' : loaded_json['finalUrl'],
+          'site_id' : id,
+          'user_agent' :loaded_json['userAgent'],
+          'emulated_as' : loaded_json['configSettings']['formFactor'],
+           'accessibility': [{
+           'total_score': loaded_json['categories']['accessibility']['score'],
+           'bypass_repetitive_content': loaded_json['audits']['bypass']['score'] is 1,
+           'color_contrast': loaded_json['audits']['color-contrast']['score'] is 1,
+           'document_title_found': loaded_json['audits']['document-title']['score'] is 1,
+           'no_duplicate_id_attribute': loaded_json['audits']['duplicate-id']['score'] is 1,
+           'html_has_lang_attribute': loaded_json['audits']['html-has-lang']['score'] is 1,
+           'html_lang_is_valid': loaded_json['audits']['html-lang-valid']['score'] is 1,
+           'images_have_alt_attribute': loaded_json['audits']['image-alt']['score'] is 1,
+           'form_elements_have_labels': loaded_json['audits']['label']['score'] is 1,
+           'links_have_names': loaded_json['audits']['link-name']['score']  is 1,
+           'lists_are_well_formed': loaded_json['audits']['list']['score']  is 1,
+           'list_items_within_proper_parents': loaded_json['audits']['listitem']['score']  is 1,
+           'meta_viewport_allows_zoom': loaded_json['audits']['meta-viewport']['score']  is 1
+           }]
+        }]
 
-        print("INFO:"+ fetch_time + '!!!!!!!!!!!!!!!!!!!!!!!!!')
-        print("INFO:"+ site_url + '!!!!!!!!!!!!!!!!!!!!!!!!!')
-        print("INFO:ID !!!!!!!!!!!!!!!!!!!!!!!!!")
-        print(site_id)
-        print("INFO:"+ user_agent + '!!!!!!!!!!!!!!!!!!!!!!!!!')
-        print("INFO:"+ emulated_as + '!!!!!!!!!!!!!!!!!!!!!!!!!')
+        #fetch_time = loaded_json['fetchTime']
+        #site_url = loaded_json['finalUrl']
+        #site_id = id
+        #user_agent = loaded_json['userAgent']
+        #emulated_as = loaded_json['configSettings']['formFactor']
 
-        dict = {"fetch_time":fetch_time,"site_url":site_url,"site_id":site_id,"user_agent":user_agent,"emulated_as":emulated_as}
-        df = df.append(dict, ignore_index=True).sort_values(by='site_id', ascending=False)
+        #print("INFO:"+ fetch_time + '!!!!!!!!!!!!!!!!!!!!!!!!!')
+        #print("INFO:"+ site_url + '!!!!!!!!!!!!!!!!!!!!!!!!!')
+        #print("INFO:ID !!!!!!!!!!!!!!!!!!!!!!!!!")
+        #print(site_id)
+        #print("INFO:"+ user_agent + '!!!!!!!!!!!!!!!!!!!!!!!!!')
+        #print("INFO:"+ emulated_as + '!!!!!!!!!!!!!!!!!!!!!!!!!')
 
-    #Load information to Big Query output table
+        #dict = {"fetch_time":fetch_time,"site_url":site_url,"site_id":site_id,"user_agent":user_agent,"emulated_as":emulated_as}
+        #df = df.append(dict, ignore_index=True).sort_values(by='site_id', ascending=False)
+        df = pd.json_normalize(data_feed_json)
     load_job = client.insert_rows_from_dataframe(table = output_table,dataframe = df, chunk_size = 500)  # API request
-
+    #Load information to Big Query output table
+    
+    
+    
 extract_info(preset='desktop')
 
