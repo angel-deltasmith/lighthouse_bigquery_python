@@ -22,8 +22,10 @@ client = Client.from_service_account_json(credential_path, project='dbt-project-
 
 #Output_Table
 output_table = client.get_table('dbt-project-335000.dbt_mangel.data_feed_complete')
+print('------------------------------------------------------------------------------------------')
+print('INFO OUTPUT TABLE:')
 print(output_table)
-
+print('------------------------------------------------------------------------------------------')
 #Setup for writting in the table
 job_config = bigquery.QueryJobConfig(destination=output_table)#parameters = destination table to write 
 job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND #If the table already exists, then append the rows
@@ -32,7 +34,7 @@ job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND #If the ta
 name = "Report_reduce_version" 
 getdate = datetime.now().strftime("%m-%d-%y")
 relative_path = 'C:\\Users\\mlope\\OneDrive\\Documentos\\Lighthouse\\Lighthouse_working\\assets\\'  ### WINDOWS -> \\..\\..\\
-
+presets = ['desktop','perf']
 #Select URLs from input table
 df_input_table = client.query('''
   SELECT 
@@ -40,25 +42,40 @@ df_input_table = client.query('''
   FROM `dbt-project-335000.dbt_mangel.input_test`''').result().to_dataframe()
 
 def extract_info(preset):
-    global df
-    for ind in df_input_table.index:
-        url = df_input_table['url'][ind]
-        id = df_input_table['id'][ind]
-        stream = os.popen('lighthouse --disable-storage-reset=true --preset=' +
-                          preset + ' --output=json --output-path='+relative_path + name+'_'+getdate+'.report.json ' + url)
+  print('INFO: preset:'+preset)
+  for ind in df_input_table.index:
 
-        time.sleep(60)
-        print("INFO:Report complete for: " + url+' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    url = df_input_table['url'][ind]
+    
+    if not 'https://' in url:
+        url = 'https://' + str(url)
 
-        json_filename = join(relative_path+name+ '_' +getdate + '.report.json ')
+    id = df_input_table['id'][ind]
+    print('------------------------------------------------------------------------------------------')
+    print('INFO: URL: '+url)
+    print('INFO: ID: ')
+    print(id)
+    print('------------------------------------------------------------------------------------------')
+    #stream = os.popen('lighthouse --disable-storage-reset=true --preset=' +
+    #                  preset + ' --output=json --output-path='+relative_path + name+'_'+getdate+'.report.json ' + url)
+    #stream = os.popen('lighthouse --list-all-audits --list-trace-categories --disable-storage-reset=true --preset=' +
+     #                 preset + ' --output=json --output-path='+relative_path + name+'_'+getdate+'.report.json ' + url)
+    stream = os.popen('lighthouse --list-all-audits=true --disable-storage-reset=true --preset=' +
+                     preset + ' --output=json --output-path='+relative_path + name+'_'+getdate+'.report.json ' + url)
+    time.sleep(3000)
+    print('------------------------------------------------------------------------------------------')
+    print("INFO:Report complete for: " + url+' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    print('------------------------------------------------------------------------------------------')
+    
+    json_filename = join(relative_path+name+ '_' +getdate + '.report.json ')
 
-        with open(json_filename, encoding="utf8") as json_data:
-            loaded_json = json.load(json_data)
-
+    with open(json_filename, encoding="utf8") as json_data:
+        loaded_json = json.load(json_data)
+        
         data_feed_json = [{
           'fetch_time' : loaded_json['fetchTime'],
           'site_url' : loaded_json['finalUrl'],
-          'site_id' : 2,
+          'site_id' : id,
           'user_agent' :loaded_json['userAgent'],
           'emulated_as' : loaded_json['configSettings']['formFactor'],
           'accessibility': [{
@@ -75,14 +92,14 @@ def extract_info(preset):
             'lists_are_well_formed': loaded_json['audits']['list']['score'] == 1,
             'list_items_within_proper_parents': loaded_json['audits']['listitem']['score'] == 1,
             'meta_viewport_allows_zoom': loaded_json['audits']['meta-viewport']['score'] == 1
-           }],
+            }],
           'best_practices': [{
             'total_score': loaded_json['categories']['best-practices']['score'],
             'avoid_application_cache': True,#loaded_json['audits']['appcache-manifest']['score'] is 1,
             'uses_https': loaded_json['audits']['is-on-https']['score'] == 1,
-            'uses_http2': loaded_json['audits']['uses-http2']['score'] == 1,
-            'uses_passive_event_listeners': loaded_json['audits']['uses-passive-event-listeners']['score'] == 1,
-            'no_document_write': loaded_json['audits']['no-document-write']['score'] == 1,
+            'uses_http2': loaded_json['audits']['uses-http2']['score'] == 1, ###is in both, mobile and desktop
+            'uses_passive_event_listeners': loaded_json['audits']['uses-passive-event-listeners']['score'] == 1,###is in both, mobile and desktop
+            'no_document_write': loaded_json['audits']['no-document-write']['score'] == 1,###is in both, mobile and desktop
             'external_anchors_use_rel_noopener': True, #loaded_json['audits']['external-anchors-use-rel-noopener']['score'] is 1,
             'no_geolocation_on_start': loaded_json['audits']['geolocation-on-start']['score'] == 1,
             'doctype_defined': loaded_json['audits']['doctype']['score'] == 1,
@@ -93,7 +110,7 @@ def extract_info(preset):
             'errors_in_console': loaded_json['audits']['errors-in-console']['score'] == 1,
             'images_have_correct_aspect_ratio': loaded_json['audits']['image-aspect-ratio']['score'] == 1
           }],
-          'performance': [{
+          'performance': [{### all performance fields are in both, mobile and desktop
             'total_score': loaded_json['categories']['performance']['score'],
             'first_contentful_paint': [{
               'raw_value':loaded_json['audits']['first-contentful-paint']['numericValue'] ,#loaded_json['audits']['first-contentful-paint']['rawValue'],
@@ -123,7 +140,7 @@ def extract_info(preset):
             'installable_manifest': loaded_json['audits']['installable-manifest']['score'] == 1,
             'uses_https': loaded_json['audits']['is-on-https']['score'] == 1,
             'redirects_http_to_https': loaded_json['audits']['redirects']['score'] == 1,#['redirects-http']['score'] is 1,
-            'has_meta_viewport': loaded_json['audits']['viewport']['score'] == 1,
+            'has_meta_viewport': loaded_json['audits']['viewport']['score'] == 1,###is in both, mobile and desktop
             'uses_service_worker': loaded_json['audits']['service-worker']['score'] == 1,
             'works_without_javascript': True ,#loaded_json['audits']['without-javascript']['score'] is 1,
             'splash_screen_found': loaded_json['audits']['splash-screen']['score'] == 1,
@@ -144,14 +161,15 @@ def extract_info(preset):
           }]
 
         }]
-        with open('data.txt', 'w') as outfile:
-          json.dump(data_feed_json, outfile)
-
-        df = pd.json_normalize(data_feed_json)
+    
+    #with open('data.txt', 'w') as outfile:
+    #  json.dump(data_feed_json, outfile)
+    print('INFO FINAL URL JSON:')
+    print(loaded_json['finalUrl'])
+    df = pd.json_normalize(data_feed_json)
     load_job = client.insert_rows_from_dataframe(table = output_table,dataframe = df, chunk_size = 500)  # API request
-
-    
-    
-    
+ 
 extract_info(preset='desktop')
 
+#for preset in presets:
+ # extract_info(preset)
