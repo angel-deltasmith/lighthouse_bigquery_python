@@ -50,7 +50,7 @@ def extract_info(preset):
     if not 'https://' in url:
         url = 'https://' + str(url)
 
-    id = df_input_table['id'][ind]
+    id = df_input_table['name'][ind]
     print('------------------------------------------------------------------------------------------')
     print('INFO: URL: '+url)
     print('INFO: ID: ')
@@ -60,9 +60,18 @@ def extract_info(preset):
     #                  preset + ' --output=json --output-path='+relative_path + name+'_'+getdate+'.report.json ' + url)
     #stream = os.popen('lighthouse --list-all-audits --list-trace-categories --disable-storage-reset=true --preset=' +
      #                 preset + ' --output=json --output-path='+relative_path + name+'_'+getdate+'.report.json ' + url)
-    stream = os.popen('lighthouse --list-all-audits=true --disable-storage-reset=true --preset=' +
-                     preset + ' --output=json --output-path='+relative_path + name+'_'+getdate+'.report.json ' + url)
-    time.sleep(3000)
+    #stream = os.popen('lighthouse --list-all-audits=true --disable-storage-reset=true --preset=' +
+    #                 preset + ' --output=json --output-path='+relative_path + name+'_'+getdate+'.report.json ' + url)
+    #stream = os.popen('lighthouse --only-categories=accessibility,best-practices,performance,pwa,seo --only-audits=bypass,color-contrast,document-title --disable-storage-reset=true --preset=' +
+    #                 preset + ' --output=json --output-path='+relative_path + name+'_'+getdate+'.report.json ' + url )
+    stream = os.popen('lighthouse --only-audits=bypass,color-contrast,document-title,duplicate-id-active,duplicate-id,html-has-lang,html-lang-valid,image-alt,label,link-name,list,listitem,'+
+    'meta-viewport,is-on-https,uses-http2,uses-passive-event-listeners,no-document-write,external-anchors-use-rel-noopener,geolocation-on-start,doctype,no-vulnerable-libraries,notification-on-start,deprecations,password-inputs-can-be-pasted-into,errors-in-console,image-aspect-ratio,'
+    +'first-contentful-paint,first-meaningful-paint,speed-index,interactive,first-cpu-idle,'+
+    'load-fast-enough-for-pwa,works-offline,installable-manifest,redirects,viewport,service-worker,without-javascript,splash-screen,themed-omnibox,'+
+    'meta-description,http-status-code,link-text,is-crawlable,robots-txt,hreflang,font-size,plugins '+
+    '--disable-storage-reset=true --preset=' +
+                     preset + ' --output=json --output-path='+relative_path + name+'_'+getdate+'.report.json ' + url )
+    time.sleep(60)
     print('------------------------------------------------------------------------------------------')
     print("INFO:Report complete for: " + url+' !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
     print('------------------------------------------------------------------------------------------')
@@ -169,7 +178,7 @@ def extract_info(preset):
     df = pd.json_normalize(data_feed_json)
     load_job = client.insert_rows_from_dataframe(table = output_table,dataframe = df, chunk_size = 500)  # API request
  
-extract_info(preset='desktop')
+extract_info(preset='perf')
 
 #for preset in presets:
  # extract_info(preset)
