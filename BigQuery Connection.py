@@ -26,6 +26,7 @@ print('-------------------------------------------------------------------------
 print('INFO OUTPUT TABLE:')
 print(output_table)
 print('------------------------------------------------------------------------------------------')
+
 #Setup for writting in the table
 job_config = bigquery.QueryJobConfig(destination=output_table)#parameters = destination table to write 
 job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND #If the table already exists, then append the rows
@@ -56,7 +57,7 @@ def map_json(complete_file_name,id):
     #json_filename = join(relative_path+file_name+ '_' +getdate + '.report.json ')
     with open(complete_file_name, encoding="utf8") as json_data:
       loaded_json = json.load(json_data)
-      
+
       data_feed_json = [{
         'fetch_time' : loaded_json['fetchTime'],
         'site_url' : loaded_json['finalUrl'],
@@ -68,7 +69,7 @@ def map_json(complete_file_name,id):
           'bypass_repetitive_content': loaded_json['audits']['bypass']['score'] == 1,
           'color_contrast': loaded_json['audits']['color-contrast']['score'] == 1,
           'document_title_found': loaded_json['audits']['document-title']['score'] == 1,
-          'no_duplicate_id_attribute': loaded_json['audits']['duplicate-id-active']['score'] == 1,#['duplicate-id']['score'] is 1,
+          'no_duplicate_id_attribute': None,#['duplicate-id']['score'] is 1,
           'html_has_lang_attribute': loaded_json['audits']['html-has-lang']['score'] == 1,
           'html_lang_is_valid': loaded_json['audits']['html-lang-valid']['score'] == 1,
           'images_have_alt_attribute': loaded_json['audits']['image-alt']['score'] == 1,
@@ -80,12 +81,12 @@ def map_json(complete_file_name,id):
           }],
         'best_practices': [{
           'total_score': loaded_json['categories']['best-practices']['score'],
-          'avoid_application_cache': True,#loaded_json['audits']['appcache-manifest']['score'] is 1,
+          'avoid_application_cache': None,#loaded_json['audits']['appcache-manifest']['score'] is 1,
           'uses_https': loaded_json['audits']['is-on-https']['score'] == 1,
           'uses_http2': loaded_json['audits']['uses-http2']['score'] == 1, 
           'uses_passive_event_listeners': loaded_json['audits']['uses-passive-event-listeners']['score'] == 1,
           'no_document_write': loaded_json['audits']['no-document-write']['score'] == 1,
-          'external_anchors_use_rel_noopener': True, #loaded_json['audits']['external-anchors-use-rel-noopener']['score'] is 1,
+          'external_anchors_use_rel_noopener': None, #loaded_json['audits']['external-anchors-use-rel-noopener']['score'] is 1,
           'no_geolocation_on_start': loaded_json['audits']['geolocation-on-start']['score'] == 1,
           'doctype_defined': loaded_json['audits']['doctype']['score'] == 1,
           'no_vulnerable_libraries': loaded_json['audits']['no-vulnerable-libraries']['score'] == 1,
@@ -114,20 +115,20 @@ def map_json(complete_file_name,id):
             'score': loaded_json['audits']['interactive']['score']
           }],
           'first_cpu_idle': [{
-            'raw_value': 1, #loaded_json['audits']['first-cpu-idle']['numericValue']
-            'score': 1, #loaded_json['audits']['first-cpu-idle']['score']
+            'raw_value': None, #loaded_json['audits']['first-cpu-idle']['numericValue']
+            'score': None, #loaded_json['audits']['first-cpu-idle']['score']
           }]
         }],
         'pwa': [{
           'total_score': loaded_json['categories']['pwa']['score'],
-          'load_fast_enough': True ,#loaded_json['audits']['load-fast-enough-for-pwa']['score'] is 1,
-          'works_offline': True,#loaded_json['audits']['works-offline']['score'] is 1,
+          'load_fast_enough': None ,#loaded_json['audits']['load-fast-enough-for-pwa']['score'] is 1,
+          'works_offline': None,#loaded_json['audits']['works-offline']['score'] is 1,
           'installable_manifest': loaded_json['audits']['installable-manifest']['score'] == 1,
           'uses_https': loaded_json['audits']['is-on-https']['score'] == 1,
           'redirects_http_to_https': loaded_json['audits']['redirects']['score'] == 1,#['redirects-http']['score'] is 1,
-          'has_meta_viewport': loaded_json['audits']['viewport']['score'] == 1,###is in both, mobile and desktop
+          'has_meta_viewport': loaded_json['audits']['viewport']['score'] == 1,
           'uses_service_worker': loaded_json['audits']['service-worker']['score'] == 1,
-          'works_without_javascript': True ,#loaded_json['audits']['without-javascript']['score'] is 1,
+          'works_without_javascript': None ,#loaded_json['audits']['without-javascript']['score'] is 1,
           'splash_screen_found': loaded_json['audits']['splash-screen']['score'] == 1,
           'themed_address_bar': loaded_json['audits']['themed-omnibox']['score'] == 1
         }],
@@ -177,10 +178,9 @@ def run_lighthouse(preset, id,file_name, url):
   complete_file_name = relative_path + file_name+'_'+getdate+'.report.json '
   print('------------------------------------------------------------------------------------------')
   print('INFO: URL: '+url)
-  print('INFO: ID: ')
-  print(id)
-  print('------------------------------------------------------------------------------------------')
+
   try:
+
     lighthouse_call = os.popen('lighthouse --only-audits=bypass,color-contrast,document-title,duplicate-id-active,duplicate-id,html-has-lang,html-lang-valid,image-alt,label,link-name,list,listitem,'+
     'meta-viewport,is-on-https,uses-http2,uses-passive-event-listeners,no-document-write,external-anchors-use-rel-noopener,geolocation-on-start,doctype,no-vulnerable-libraries,notification-on-start,deprecations,password-inputs-can-be-pasted-into,errors-in-console,image-aspect-ratio,'
     +'first-contentful-paint,first-meaningful-paint,speed-index,interactive,first-cpu-idle,'+
@@ -199,9 +199,11 @@ def run_lighthouse(preset, id,file_name, url):
       return False
     else:
       df = pd.json_normalize(data_feed_json_mapped)
-      print("doneeeeeeeeeee")
-      load_job = client.insert_rows_from_dataframe(table = output_table,dataframe = df, chunk_size = 500)  # API request
+      print("Process finished calling LH and mapping the JSON")
+      load_job = client.insert_rows_from_dataframe(table = output_table,dataframe = df, chunk_size = 500) #sends he informton to the data_feed table in BQ
       return True
+
+
   except AttributeError as error:
       print("AttributeError: {0}".format(error))
   except Exception as exception:
@@ -216,11 +218,11 @@ def run_lighthouse(preset, id,file_name, url):
     
 
 def validations(preset,df_input_table):
-  """[summary]
-
+  """This method validates if the urls coming from BQ have the right format, creates some variables that will be send to the lighthouse service and 
+  calls the run_lighthouse method
   Args:
-      preset ([type]): [description]
-      df_input_table ([type]): [description]
+      preset (string): preset (string): the preset that will be used to generate the report, could be perf(mobile) or desktop
+      df_input_table (table): the input table from BQ that has the information from the companies
 
   Returns:
       [boolean]: [returns true if all the processes were executed correctly, returns a false if it was an error]
@@ -243,13 +245,11 @@ def validations(preset,df_input_table):
     else:
       if not '.' in url:# if the dot is missing the function won't call the API
             print("Invalid url") 
-      
+            service_run = False
       elif not 'https://' in url:#adds the https if the url doesn't have it
             url = 'https://' + str(url)
-            print('pase por el if')
             service_run= run_lighthouse(preset, id,file_name, url)
-    print("INFO SERVICE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-    print(service_run)        
+  
   return service_run
 
 for preset in presets:
