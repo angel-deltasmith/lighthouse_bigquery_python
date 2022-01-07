@@ -19,5 +19,5 @@
     
 3. Make sure to change the path for the key in order to connect to BQ (line 17)
 4. Add the relative path where you want save the JSON files coming from lighthouse (line 36)
-5. Launch the Python file in Visual Code or any IDE and run the following command: `python name_of_the_file.py`
+5. Launch the Python file lighthouse_API.py in Visual Code or any IDE and run the following command: `python name_of_the_file.py`
 6. The code will fill the data_feed table in BQ with the information coming from lighthouse
