@@ -20,15 +20,9 @@
 * pip install join
 * pip install export
 * pip install pyarrow
-* pip install --upgrade google-cloud-BigQuery
-* pip3 install --upgrade google-cloud-bigquery
-* pip install --upgrade google-cloud
-* pip install --upgrade google-cloud-bigquery
-* pip install --upgrade google-cloud-bigquery
-
-
-4. After running the script, it will generate 2 .csv files: one for the desktop and another for mobile results and a JSON file.
-5. Take this personal Medium article as a reference for a better understanding of the code: <br>https://medium.com/@olimpiuseulean/use-python-to-automate-google-lighthouse-reports-and-keep-a-historical-record-of-these-65f378325d64
+* pip install google-cloud-storage
+* pip install google-cloud-bigquery
+* pip install pandas
 
 USEFULL LINKS
 https://github.com/GoogleChrome/lighthouse/issues/5424
